@@ -1,6 +1,6 @@
 # Let's create a new git in rust!
 
-## 1 - Create the project structure
+## 1 - [Create the project structure](https://github.com/its-saeed/rit/commit/fd6fa5295b3b704da2f73b4b4aa87557a5874d0f)
 Create a new rust project.
 ```bash
 cargo new rit
@@ -17,7 +17,7 @@ path = "src/main.rs"
 name = "rit"
 ```
 
-## 2 - Add initial dependencies to the project
+## 2 - [Add initial dependencies to the project](https://github.com/its-saeed/rit/commit/48fe2c298d9922c64095b1f7e6559bd5249b1a7a)
 Add these crates to the project's dependencies:
 
 ```toml
@@ -28,7 +28,7 @@ flate2 = "1.0.28"
 sha1 = "0.10.6"
 
 ```
-## 3 - Create boilerplate code to start parsing arguments
+## 3 - [Start parsing first command, init](https://github.com/its-saeed/rit/commit/65630f9587a8ccd0f498aea46b11ef668dc3155a)
 Add parsing arguments basics using `clap` crate. Parse to have a simple CLI realizing the `init` command. No more than just respecting `rit init`
 
 1. Create a new module named `cli`
@@ -46,21 +46,11 @@ src/
 └── main.rs
 ```
 
-2. The initial contents of the src/cli/mod.rs should be:
 
-```rust
-pub enum Command {
-    Init,
-}
+2. Start parsing arguments in `src/cli/mod.rs` like:
 
-pub fn parse_args() -> Result<Subcommand, String> {
-    todo!()
-}
-```
 We're not going to use any crates for errors right now, Let's just return a simple `String` error.
 
-## 4 - Parse init command
-Change `src/cli/mod.rs` like:
 
 ```rust
 // 1. Import necessary structs.
@@ -85,13 +75,13 @@ pub fn parse_args() -> Result<Command, String> {
 }
 
 ```
-`Use` cli structs and functions publicly so we can use them like `rit::parse_args` instead of `rit::cli::parse_args`
+3. `Use` cli structs and functions publicly so we can use them like `rit::parse_args` instead of `rit::cli::parse_args`
 ```rust
 // src/lib.rs
 
 pub use cli::*;
 ```
-Use `parse_args` and print the results in main:
+4. Use `parse_args` and print the results in main:
 ```rust
 // src/main.rs
 use rit::parse_args;
