@@ -1,3 +1,6 @@
+use rit::parse_args;
+
 fn main() {
-    println!("Hello, world!");
+    let command = parse_args().unwrap();
+    println!("{:?}", command);
 }
