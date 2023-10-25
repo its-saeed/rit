@@ -1,22 +1,18 @@
-use configparser::ini::Ini;
-use std::{
-    fs::File,
-    io::Read,
-    path::{Path, PathBuf},
-};
+use std::{fs::File, io::Read, path::Path};
 
-use crate::git_config::GitConfig;
+use crate::{git_config::GitConfig, DirectoryManager};
 
 #[derive(Debug)]
 pub struct GitRepository {
-    worktree: PathBuf,
     config: GitConfig,
+    directory_manager: DirectoryManager,
 }
 
 impl GitRepository {
-    pub fn new(path: &Path, _force: bool) -> Result<Self, String> {
-        let git_path = GitRepository::git_dir(path);
-        let config_file = GitRepository::repo_path(&git_path, &["config"]);
+    /// Load an existing repository.
+    pub fn load(base_path: &Path) -> Result<Self, String> {
+        let directory_manager = DirectoryManager::new(base_path);
+        let config_file = directory_manager.config_file();
 
         let mut config_file = File::open(config_file).map_err(|e| e.to_string())?;
         let mut config_string = String::new();
@@ -35,50 +31,13 @@ impl GitRepository {
         }
 
         Ok(Self {
-            worktree: path.into(),
             config,
+            directory_manager,
         })
     }
 
-    pub fn git_dir(path: &Path) -> PathBuf {
-        path.to_owned().join(".git")
-    }
-
-    pub fn repo_path(git_path: &Path, paths: &[&str]) -> PathBuf {
-        let mut git_dir = git_path.to_owned();
-        for path in paths {
-            git_dir.push(path);
-        }
-        git_dir
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    const PROJECT_DIR: &'static str = "~/home/projects/test";
-    use std::path::Path;
-
-    use super::GitRepository;
-
-    #[test]
-    fn should_return_correct_git_path() {
-        assert_eq!(
-            GitRepository::git_dir(&Path::new(&PROJECT_DIR)),
-            Path::new("~/home/projects/test/.git")
-        );
-    }
-
-    #[test]
-    fn repo_path_function_should_return_correct_path() {
-        let git_path = GitRepository::git_dir(Path::new(PROJECT_DIR));
-        assert_eq!(
-            GitRepository::repo_path(&git_path, &["config"]),
-            Path::new("~/home/projects/test/.git/config")
-        );
-
-        assert_eq!(
-            GitRepository::repo_path(&git_path, &["another", "file"]),
-            Path::new("~/home/projects/test/.git/another/file")
-        );
+    /// Create a new repository
+    pub fn create(_base_path: &Path) -> Self {
+        todo!()
     }
 }
