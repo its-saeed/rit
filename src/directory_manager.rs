@@ -1,26 +1,40 @@
-use std::path::{Path, PathBuf};
+use std::{fs, path::PathBuf};
 
 #[derive(Debug)]
 pub struct DirectoryManager {
     pub work_tree: PathBuf,
     pub dot_git_path: PathBuf,
+    pub config_file: PathBuf,
+    pub description_file: PathBuf,
+    pub head_file: PathBuf,
 }
 
 impl DirectoryManager {
     pub fn new<T: Into<PathBuf>>(base_path: T) -> Self {
         let base_path: PathBuf = base_path.into();
+        let dot_git_path = base_path.join(".git");
+
         Self {
-            dot_git_path: base_path.join(".git"),
             work_tree: base_path,
+            config_file: dot_git_path.join("config"),
+            description_file: dot_git_path.join("description"),
+            head_file: dot_git_path.join("HEAD"),
+            dot_git_path,
         }
     }
 
-    pub fn config_file(&self) -> PathBuf {
-        self.dot_git_path.join("config")
+    pub fn is_dot_git_empty(&self) -> Result<bool, std::io::Error> {
+        Ok(!self.dot_git_path.exists() || self.dot_git_path.read_dir()?.next().is_none())
     }
 
-    pub fn mkdir_in_dot_git(&self, _path: &[&Path]) -> Result<(), String> {
-        todo!()
+    pub fn create_directory_tree(&self) -> Result<(), std::io::Error> {
+        fs::create_dir_all(&self.work_tree)?;
+        fs::create_dir_all(&self.dot_git_path)?;
+        fs::create_dir_all(self.dot_git_path.join("branches"))?;
+        fs::create_dir_all(self.dot_git_path.join("objects"))?;
+        fs::create_dir_all(self.dot_git_path.join("refs").join("tags"))?;
+        fs::create_dir_all(self.dot_git_path.join("refs").join("heads"))?;
+        Ok(())
     }
 }
 
@@ -41,11 +55,19 @@ mod tests {
     }
 
     #[test]
-    fn should_return_correct_config_file_path() {
+    fn should_return_correct_file_paths() {
         let dir_manager = DirectoryManager::new(PROJECT_DIR);
         assert_eq!(
-            dir_manager.config_file(),
+            dir_manager.config_file,
             Path::new("~/home/projects/test/.git/config")
+        );
+        assert_eq!(
+            dir_manager.description_file,
+            Path::new("~/home/projects/test/.git/description")
+        );
+        assert_eq!(
+            dir_manager.head_file,
+            Path::new("~/home/projects/test/.git/HEAD")
         );
     }
 }

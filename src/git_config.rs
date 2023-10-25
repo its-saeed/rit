@@ -28,6 +28,13 @@ impl GitConfig {
             None => return Err("Failed to parse repositoryformatversion".to_string()),
         }
     }
+
+    pub fn default_str() -> &'static str {
+        r#"[core]
+            bare = false
+            repositoryformatversion = 0
+            filemode = false"#
+    }
 }
 
 impl FromStr for GitConfig {
@@ -40,6 +47,12 @@ impl FromStr for GitConfig {
             .map_err(|_| "Failed to parse config".to_string())?;
 
         Ok(Self { config })
+    }
+}
+
+impl Default for GitConfig {
+    fn default() -> Self {
+        GitConfig::default_str().parse().unwrap()
     }
 }
 
