@@ -1,4 +1,4 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, fs::File, io::Read, path::Path, str::FromStr};
 
 use configparser::ini::Ini;
 
@@ -10,6 +10,17 @@ pub struct GitConfig {
 }
 
 impl GitConfig {
+    pub fn load_from_file(path: &Path) -> Result<Self, String> {
+        let mut config_file = File::open(path)
+            .map_err(|e| format!("Failed to open config file: {}, {}", path.display(), e))?;
+        let mut config_string = String::new();
+        config_file
+            .read_to_string(&mut config_string)
+            .map_err(|e| e.to_string())?;
+
+        Ok(config_string.parse()?)
+    }
+
     pub fn repository_format_version(&self) -> Result<u16, String> {
         let core = self
             .config
@@ -25,8 +36,12 @@ impl GitConfig {
             .map_err(|e| e.to_string())?
         {
             Some(v) => Ok(v),
-            None => return Err("Failed to parse repositoryformatversion".to_string()),
+            None => Err("Failed to parse repositoryformatversion".to_string()),
         }
+    }
+
+    pub fn is_repository_format_version_valid(&self) -> Result<bool, String> {
+        Ok(self.repository_format_version()? == 0)
     }
 
     pub fn default_str() -> &'static str {
@@ -71,6 +86,7 @@ mod tests {
         let config: GitConfig = config_string.parse().unwrap();
 
         assert_eq!(config.repository_format_version().unwrap(), 0);
+        assert!(config.is_repository_format_version_valid().unwrap());
     }
 
     #[test]

@@ -1,8 +1,4 @@
-use std::{
-    fs::File,
-    io::Read,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use crate::{git_config::GitConfig, DirectoryManager};
 
@@ -14,30 +10,19 @@ pub struct GitRepository {
 
 impl GitRepository {
     /// Load an existing repository.
-    pub fn load(base_path: &Path) -> Result<Self, String> {
-        let directory_manager = DirectoryManager::new(base_path);
-        let config_file = &directory_manager.config_file;
+    pub fn load<T: Into<PathBuf>>(base_path: T) -> Result<Self, String> {
+        GitRepository::try_from(DirectoryManager::new(base_path))
+    }
 
-        let mut config_file = File::open(config_file).map_err(|e| e.to_string())?;
-        let mut config_string = String::new();
-        config_file
-            .read_to_string(&mut config_string)
-            .map_err(|e| e.to_string())?;
-
-        let config: GitConfig = config_string.parse()?;
-
-        let version = config.repository_format_version()?;
-        if version != 0 {
-            return Err(format!(
-                "Repository format version {} not supported",
-                version
-            ));
+    /// Try to load a git repo in `working_dir`, if it fails, recursively try parent directory.
+    pub fn find(working_dir: &Path) -> Result<Self, String> {
+        match DirectoryManager::is_toplevel_directory(working_dir) {
+            true => GitRepository::load(working_dir),
+            false => {
+                let parent_path = working_dir.parent().ok_or("Not a git repository")?;
+                GitRepository::find(parent_path)
+            }
         }
-
-        Ok(Self {
-            config,
-            directory_manager,
-        })
     }
 
     /// Create a new repository
@@ -83,6 +68,23 @@ impl GitRepository {
         Ok(Self {
             directory_manager,
             config: GitConfig::default(),
+        })
+    }
+}
+
+impl TryFrom<DirectoryManager> for GitRepository {
+    type Error = String;
+
+    fn try_from(directory_manager: DirectoryManager) -> Result<Self, Self::Error> {
+        let config = GitConfig::load_from_file(&directory_manager.config_file)?;
+
+        if !config.is_repository_format_version_valid()? {
+            return Err("Repository format version not supported".to_string());
+        }
+
+        Ok(Self {
+            config,
+            directory_manager,
         })
     }
 }

@@ -1,6 +1,9 @@
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DirectoryManager {
     pub work_tree: PathBuf,
     pub dot_git_path: PathBuf,
@@ -29,6 +32,10 @@ impl DirectoryManager {
             refs_heads_path: dot_git_path.join("refs").join("heads"),
             dot_git_path,
         }
+    }
+
+    pub fn is_toplevel_directory(path: &Path) -> bool {
+        path.exists() && path.join(".git").is_dir() && path.join(".git/config").is_file()
     }
 
     pub fn is_dot_git_empty(&self) -> Result<bool, std::io::Error> {
