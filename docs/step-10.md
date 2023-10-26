@@ -1,4 +1,4 @@
-# 10 - Add `find` function to GitRepository
+# 10 - [Add `find` function to GitRepository](https://github.com/its-saeed/rit/commit/b6ab03c3f212df1869ed91d8011a4997267f199c)
 While we’re implementing repositories, we’re going to need a function to find the root of the current repository. We’ll use it a lot, since almost all Git functions work on an existing repository (except init, of course!). Sometimes that root is the current directory, but it may also be a parent: your repository’s root may be in ~/Documents/MyProject, but you may currently be working in ~/Documents/MyProject/src/tui/frames/mainview/. The `GitRepository::find` function we’ll now create will look for that root, starting at the current directory and recursing back to /. To identify a path as a repository, it will check for the presence of a .git directory.
 
 Let's start by adding an auxiliary function to `DirectoryManager` to see if a given directory is top level directory of a repository.
@@ -7,7 +7,7 @@ Let's start by adding an auxiliary function to `DirectoryManager` to see if a gi
         path.exists() && path.join(".git").is_dir() && path.join(".git/config").is_file()
     }
 ```
-I added a few integration tests to `tests/directory_manager.rs` to verify that `is_toplevel_directory` works fine. You can see them here<ADD_A_LINK>
+I added a few integration tests to `tests/directory_manager.rs` to verify that `is_toplevel_directory` works fine. You can see them [here](https://github.com/its-saeed/rit/commit/b6ab03c3f212df1869ed91d8011a4997267f199c#diff-5be74a035aa42d5bef6d92332f6a7c03fd0d8b1db42f4211928a66eba25f99b3).
 
 Throughout the development of any projects, you need to refactor regularly, otherwise you'll end of with a messy code. In the current code, `GitRepository` is responsible for opening and parsing the config file which is not nice. I'm going to move it to `GitConfig` itself:
 
@@ -87,7 +87,7 @@ And finally, we're ready to implement `GitRepository::find` function:
     }
 ```
 If given directory is a top-top level directory, load it. Otherwise, Go to parent directory and check it.
-As usual I added integration tests to verify `GitRepository` works fine or not. Take a look at them [here]()ADD_LINK_HERE.
+As usual I added integration tests to verify `GitRepository` works fine or not. Take a look at them [here](https://github.com/its-saeed/rit/commit/b6ab03c3f212df1869ed91d8011a4997267f199c#diff-dac65a8be319a4b0d603d44d9227548a1504188e233f8849884e91184d2e948b).
 
 ## what to do next
 1. Consider using a better error type instead of `String`.

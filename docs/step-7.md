@@ -1,4 +1,4 @@
-# [7 - Implement GitRepository::create](https://github.com/its-saeed/rit/commit/7f3147188bca9e8ee3c159561dbb7952b08b7a55)
+# 7 - [Implement GitRepository::create](https://github.com/its-saeed/rit/commit/7f3147188bca9e8ee3c159561dbb7952b08b7a55)
 ## Good to know before start
 To create a new repository, we start with a directory (which we create if doesn’t already exist) and create the git directory inside (which must not exist already, or be empty). That directory is called .git (the leading period makes it “hidden” on Unix systems), and contains: 
 

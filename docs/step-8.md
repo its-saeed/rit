@@ -1,4 +1,4 @@
-# 8 - Let's add some integration tests
+# 8 - [Let's add some integration tests](https://github.com/its-saeed/rit/commit/cee5c8bdd9356791d9f203024b1edb81a41c8615)
 ## Good to know
 * How to write [integration tests in Rust.](https://doc.rust-lang.org/rust-by-example/testing/integration_testing.html)
 
