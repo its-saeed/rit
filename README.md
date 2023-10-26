@@ -828,7 +828,7 @@ fn if_project_directory_is_empty_create_should_be_successful() {
 
 The rest of the tests are self-explanatory. See them [here](https://github.com/its-saeed/rit/commit/cee5c8bdd9356791d9f203024b1edb81a41c8615#diff-5be74a035aa42d5bef6d92332f6a7c03fd0d8b1db42f4211928a66eba25f99b3)
 
-## 8 - Finish `init` command implementation
+## [8 - Finish `init` command implementation](https://github.com/its-saeed/rit/commit/cef24c8bcc9fa4bcea5957a69e81670680d0ad2e)
 
 `init` command is supposed to have a path argument. Let's make it mandatory and extract it:
 ```rust
@@ -871,4 +871,4 @@ fn main() {
 }
 
 ```
-Finally you can run it `cargo run -- init /tmp/test-project`. You'll have a compilation error. Try to fix it or take a look at the code!
+Finally you can run it `cargo run -- init /tmp/test-project`. You'll have a compilation error. Try to fix it or take a look at the [commit](https://github.com/its-saeed/rit/commit/cef24c8bcc9fa4bcea5957a69e81670680d0ad2e)!
