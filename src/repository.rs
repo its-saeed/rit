@@ -1,4 +1,8 @@
-use std::{fs::File, io::Read, path::Path};
+use std::{
+    fs::File,
+    io::Read,
+    path::{Path, PathBuf},
+};
 
 use crate::{git_config::GitConfig, DirectoryManager};
 
@@ -37,11 +41,14 @@ impl GitRepository {
     }
 
     /// Create a new repository
-    pub fn create(base_path: &Path) -> Result<Self, String> {
+    pub fn create<T: Into<PathBuf>>(base_path: T) -> Result<Self, String> {
         let directory_manager = DirectoryManager::new(base_path);
 
         if directory_manager.work_tree.exists() && !directory_manager.work_tree.is_dir() {
-            return Err(format!("{} is not a directory!", base_path.display()));
+            return Err(format!(
+                "{} is not a directory!",
+                directory_manager.work_tree.display()
+            ));
         }
 
         if !directory_manager

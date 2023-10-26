@@ -1,6 +1,8 @@
-use rit::parse_args;
+use rit::{parse_args, repository::GitRepository, Command};
 
 fn main() {
     let command = parse_args().unwrap();
-    println!("{:?}", command);
+    match command {
+        Command::Init { path } => GitRepository::create(path).unwrap(),
+    };
 }
