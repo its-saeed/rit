@@ -4,8 +4,8 @@ use crate::{git_config::GitConfig, DirectoryManager};
 
 #[derive(Debug)]
 pub struct GitRepository {
-    config: GitConfig,
-    directory_manager: DirectoryManager,
+    pub config: GitConfig,
+    pub directory_manager: DirectoryManager,
 }
 
 impl GitRepository {

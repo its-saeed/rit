@@ -7,6 +7,10 @@ pub struct DirectoryManager {
     pub config_file: PathBuf,
     pub description_file: PathBuf,
     pub head_file: PathBuf,
+    pub branches_path: PathBuf,
+    pub objects_path: PathBuf,
+    pub refs_tags_path: PathBuf,
+    pub refs_heads_path: PathBuf,
 }
 
 impl DirectoryManager {
@@ -19,6 +23,10 @@ impl DirectoryManager {
             config_file: dot_git_path.join("config"),
             description_file: dot_git_path.join("description"),
             head_file: dot_git_path.join("HEAD"),
+            branches_path: dot_git_path.join("branches"),
+            objects_path: dot_git_path.join("objects"),
+            refs_tags_path: dot_git_path.join("refs").join("tags"),
+            refs_heads_path: dot_git_path.join("refs").join("heads"),
             dot_git_path,
         }
     }
@@ -30,10 +38,10 @@ impl DirectoryManager {
     pub fn create_directory_tree(&self) -> Result<(), std::io::Error> {
         fs::create_dir_all(&self.work_tree)?;
         fs::create_dir_all(&self.dot_git_path)?;
-        fs::create_dir_all(self.dot_git_path.join("branches"))?;
-        fs::create_dir_all(self.dot_git_path.join("objects"))?;
-        fs::create_dir_all(self.dot_git_path.join("refs").join("tags"))?;
-        fs::create_dir_all(self.dot_git_path.join("refs").join("heads"))?;
+        fs::create_dir_all(&self.branches_path)?;
+        fs::create_dir_all(&self.objects_path)?;
+        fs::create_dir_all(&self.refs_heads_path)?;
+        fs::create_dir_all(&self.refs_tags_path)?;
         Ok(())
     }
 }
@@ -68,6 +76,31 @@ mod tests {
         assert_eq!(
             dir_manager.head_file,
             Path::new("~/home/projects/test/.git/HEAD")
+        );
+    }
+
+    #[test]
+    fn should_return_correct_paths() {
+        let dir_manager = DirectoryManager::new(PROJECT_DIR);
+        assert_eq!(
+            dir_manager.objects_path,
+            Path::new("~/home/projects/test/.git/objects")
+        );
+        assert_eq!(
+            dir_manager.branches_path,
+            Path::new("~/home/projects/test/.git/branches")
+        );
+        assert_eq!(
+            dir_manager.refs_heads_path,
+            Path::new("~/home/projects/test/.git/refs/heads")
+        );
+        assert_eq!(
+            dir_manager.refs_tags_path,
+            Path::new("~/home/projects/test/.git/refs/tags")
+        );
+        assert_eq!(
+            dir_manager.dot_git_path,
+            Path::new("~/home/projects/test/.git/")
         );
     }
 }
