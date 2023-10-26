@@ -798,7 +798,7 @@ impl DirectoryManager {
 }
 ```
 
-I also added one more unit test to `directory_manager` module. You can see it here <PUT_COMMIT_ID_HERE>
+I also added one more unit test to `directory_manager` module. You can see it [here](https://github.com/its-saeed/rit/commit/cee5c8bdd9356791d9f203024b1edb81a41c8615#diff-1da8b3cfe58b365cf77ad4a6493447271c8bdc9639b70918b88e075d11133a99R81).
 
 Let's add a few tests for `GitRepository` as well. Crate a new file `tests/repository.rs` and a first test:
 ```rust
@@ -826,4 +826,4 @@ fn if_project_directory_is_empty_create_should_be_successful() {
 }
 ```
 
-The rest of the tests are self-explanatory. See them here. <COMMIT_ID_HERE>
+The rest of the tests are self-explanatory. See them [here](https://github.com/its-saeed/rit/commit/cee5c8bdd9356791d9f203024b1edb81a41c8615#diff-5be74a035aa42d5bef6d92332f6a7c03fd0d8b1db42f4211928a66eba25f99b3)
