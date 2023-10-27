@@ -1,6 +1,9 @@
 use std::{collections::HashMap, fs::File, io::Read, path::Path, str::FromStr};
 
+use anyhow::Context;
 use configparser::ini::Ini;
+
+use crate::error::ConfigParseError;
 
 type Config = HashMap<String, HashMap<String, Option<String>>>;
 
@@ -10,37 +13,42 @@ pub struct GitConfig {
 }
 
 impl GitConfig {
-    pub fn load_from_file(path: &Path) -> Result<Self, String> {
-        let mut config_file = File::open(path)
-            .map_err(|e| format!("Failed to open config file: {}, {}", path.display(), e))?;
+    pub fn load_from_file(path: &Path) -> Result<Self, ConfigParseError> {
+        let mut config_file = File::open(path).context("Failed to open config file")?;
         let mut config_string = String::new();
         config_file
             .read_to_string(&mut config_string)
-            .map_err(|e| e.to_string())?;
+            .context("Failed to read config file")?;
 
         Ok(config_string.parse()?)
     }
 
-    pub fn repository_format_version(&self) -> Result<u16, String> {
+    pub fn repository_format_version(&self) -> Result<u16, ConfigParseError> {
         let core = self
             .config
             .get("core")
-            .ok_or("Core section doesn't exist".to_string())?;
+            .ok_or(ConfigParseError::ParseFailed(
+                "Core section doesn't exist".to_string(),
+            ))?;
 
         match core
             .get("repositoryformatversion")
-            .ok_or("repositoryformatversion not found")?
+            .ok_or(ConfigParseError::ParseFailed(
+                "repositoryformatversion not found.".to_string(),
+            ))?
             .clone()
             .map(|ver| ver.parse::<u16>())
             .transpose()
-            .map_err(|e| e.to_string())?
+            .map_err(|e| ConfigParseError::ParseFailed(e.to_string()))?
         {
             Some(v) => Ok(v),
-            None => Err("Failed to parse repositoryformatversion".to_string()),
+            None => Err(ConfigParseError::ParseFailed(
+                "repositoryformatversion doesn't exist in config".to_string(),
+            )),
         }
     }
 
-    pub fn is_repository_format_version_valid(&self) -> Result<bool, String> {
+    pub fn is_repository_format_version_valid(&self) -> Result<bool, ConfigParseError> {
         Ok(self.repository_format_version()? == 0)
     }
 
@@ -53,13 +61,13 @@ impl GitConfig {
 }
 
 impl FromStr for GitConfig {
-    type Err = String;
+    type Err = ConfigParseError;
 
     fn from_str(config_str: &str) -> Result<Self, Self::Err> {
         let mut config = Ini::new();
         let config = config
             .read(config_str.to_string())
-            .map_err(|_| "Failed to parse config".to_string())?;
+            .map_err(ConfigParseError::ParseFailed)?;
 
         Ok(Self { config })
     }

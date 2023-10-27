@@ -1,4 +1,4 @@
-# [9 - Finish `init` command implementation](https://github.com/its-saeed/rit/commit/cef24c8bcc9fa4bcea5957a69e81670680d0ad2e)
+# 9 - [Finish `init` command implementation](https://github.com/its-saeed/rit/commit/cef24c8bcc9fa4bcea5957a69e81670680d0ad2e)
 
 `init` command is supposed to have a path argument. Let's make it mandatory and extract it:
 ```rust
