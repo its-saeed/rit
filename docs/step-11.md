@@ -1,4 +1,4 @@
-# 10 - [Use a better approach to handle errors]()
+# 11 - [Use a better approach to handle errors](https://github.com/its-saeed/rit/commit/b31531192c053f34bbfa8c8fd2700f43442d95b7)
 ## Good to know before start
 As you already used `Result`, it's the preferred way to handle errors in rust applications. What if I want to introduce new error types? Unless you don't want to propagate your errors to callers, It's more idiomatic to implement `Error` trait for your new error type. 
 
@@ -51,7 +51,7 @@ Now you can easily use this:
     pub fn load_from_file(path: &Path) -> Result<Self, ConfigParseError> {
         let mut config_file = File::open(path)?;
 ```
-Why? Because we declared `IoError` in `ConfigParseError` and we asked to have `From<std::io::Error` implemented for us. So in the case of std::io::Error, we return `ConfigParseError::IoError`. It's better to add some contexts to errors. Everything that can help us diagonse the error eaiser.
+Why? Because we declared `IoError` in `ConfigParseError` and we asked to have `From<std::io::Error` implemented for us. So in the case of std::io::Error, we return `ConfigParseError::IoError`. It's better to add some contexts to errors. Everything that can help us diagnose the error easier.
 
 Here is the final Implementation of the function:
 ```rust
@@ -66,7 +66,7 @@ Here is the final Implementation of the function:
     }
 ```
 You can use `context` function from `anyhow` to add context to the error.
-Similarily we can update `repository_format_version` function to use our new error type:
+Similarly, we can update `repository_format_version` function to use our new error type:
 ```rust
     pub fn repository_format_version(&self) -> Result<u16, ConfigParseError> {
         let core = self
@@ -145,7 +145,7 @@ impl TryFrom<DirectoryManager> for GitRepository {
 }
 ```
 
-Change return type of `load`, `find`, and `create` functions to `Result<Self, CreateRepoError>` and try to make it compile. You can see the final code here LIKE_HERE.
+Change return type of `load`, `find`, and `create` functions to `Result<Self, CreateRepoError>` and try to make it compile. You can see the final code [here](https://github.com/its-saeed/rit/commit/b31531192c053f34bbfa8c8fd2700f43442d95b7).
 
 For example, the altered code of `find` is:
 
@@ -197,4 +197,4 @@ $ cargo run -- init /tmp/prj-dir
 ```
 You must see `Error: Provided toplevel is not a directory.`
 
-Please take a look at the commit<LINK_HERE> changes. I also added a tiny error type for argument parsing errors.
+Please take a look at the [commit changes](https://github.com/its-saeed/rit/commit/b31531192c053f34bbfa8c8fd2700f43442d95b7). I also added a tiny error type for argument parsing errors.

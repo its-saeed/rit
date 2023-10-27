@@ -14,3 +14,4 @@ The [original tutorial](https://wyag.thb.lt/) is written in python by Thibault P
 8. [Let's add some integration tests](./docs/step-8.md)
 9. [Finish `init` command implementation](./docs/step-9.md)
 10. [Add `find` function to GitRepository](./docs/step-10.md)
+11. [Use a better approach to handle errors](./docs/step-11.md)
