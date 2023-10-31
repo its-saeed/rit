@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 
 use anyhow::Context;
 
-use crate::{error::CreateRepoError, git_config::GitConfig, DirectoryManager};
+use crate::{error::CreateRepoError, git_config::GitConfig, git_object, DirectoryManager};
 
 #[derive(Debug)]
 pub struct GitRepository {
@@ -67,6 +67,10 @@ impl GitRepository {
             directory_manager,
             config: GitConfig::default(),
         })
+    }
+
+    pub fn find_object(&self, _object_type: git_object::GitObjectType, name: String) -> String {
+        name
     }
 }
 

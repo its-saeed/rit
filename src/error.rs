@@ -1,3 +1,5 @@
+use std::num::ParseIntError;
+
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -36,5 +38,26 @@ pub enum CreateRepoError {
 #[derive(Debug, Error)]
 pub enum ParseArgumentsError {
     #[error(transparent)]
+    ParseObjectTypeError(#[from] ObjectParseError),
+
+    #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
+}
+
+#[derive(Debug, Error)]
+pub enum ObjectParseError {
+    #[error("Object type is not valid")]
+    InvalidObjectType,
+
+    #[error(transparent)]
+    InvalidObjectSize(#[from] ParseIntError),
+
+    #[error("Header size differs from the actual read bytes")]
+    MismatchedObjectSize,
+
+    #[error(transparent)]
+    UnexpectedError(#[from] anyhow::Error),
+
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
 }

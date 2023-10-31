@@ -51,12 +51,16 @@ impl DirectoryManager {
         fs::create_dir_all(&self.refs_tags_path)?;
         Ok(())
     }
+
+    pub fn sha_to_file_path(&self, sha: &str) -> PathBuf {
+        self.objects_path.join(&sha[0..2]).join(&sha[2..])
+    }
 }
 
 #[cfg(test)]
 mod tests {
     const PROJECT_DIR: &'static str = "~/home/projects/test";
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
 
     use crate::DirectoryManager;
 
@@ -108,6 +112,20 @@ mod tests {
         assert_eq!(
             dir_manager.dot_git_path,
             Path::new("~/home/projects/test/.git/")
+        );
+    }
+
+    #[test]
+    fn sha_to_file_path_should_return_correct_path() {
+        let dir_manager = DirectoryManager::new(PROJECT_DIR);
+
+        let file_path = dir_manager.sha_to_file_path("e673d1b7eaa0aa01b5bc2442d570a765bdaae751");
+        assert_eq!(
+            file_path,
+            PathBuf::from(format!(
+                "{}/.git/objects/e6/73d1b7eaa0aa01b5bc2442d570a765bdaae751",
+                PROJECT_DIR
+            ))
         );
     }
 }
