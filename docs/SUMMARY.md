@@ -1,6 +1,9 @@
 # Table of contents
 
-* [Create the project structure](README.md)
+## Lets' start
+
+* [Install rust](README.md)
+* [Create the project structure](lets-start/readme.md)
 
 ## Git init command
 
