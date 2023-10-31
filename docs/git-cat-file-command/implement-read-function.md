@@ -89,6 +89,15 @@ mod tests {
 
 Pay attention that tests can return `Result` as well. Using ? we can make a test fail if one of our functions returns an error.
 
+We also used a new crate, `hex` to convert a hex string to raw bytes. Add it as a dev-dependency to the `Cargo.toml`
+
+{% code title="Cargo.toml" %}
+```toml
+[dev-dependencies]
+hex = "0.4.3"
+```
+{% endcode %}
+
 ### Implement read\_blob\_object function
 
 We have all parts of the `read` function except:
@@ -99,10 +108,8 @@ We have all parts of the `read` function except:
         GitObjectType::Tree => Ok(Box::new(read_tree_object(&mut buffer, object_header)?)),
         GitObjectType::Tag => Ok(Box::new(read_tag_object(&mut buffer, object_header)?)),
         GitObjectType::Blob => Ok(Box::new(read_blob_object(&mut buffer, object_header)?)),
-    }
+    }The function is simple, because blobs are simple:
 ```
-
-The function is simple, because blobs are simple:
 
 {% code title="src/git_object.rs" lineNumbers="true" %}
 ```rust
