@@ -20,7 +20,7 @@ impl GitConfig {
             .read_to_string(&mut config_string)
             .context("Failed to read config file")?;
 
-        Ok(config_string.parse()?)
+        config_string.parse()
     }
 
     pub fn repository_format_version(&self) -> Result<u16, ConfigParseError> {

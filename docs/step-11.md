@@ -62,7 +62,7 @@ Here is the final Implementation of the function:
             .read_to_string(&mut config_string)
             .context("Failed to read config file")?;
 
-        Ok(config_string.parse()?)
+        config_string.parse()
     }
 ```
 You can use `context` function from `anyhow` to add context to the error.
