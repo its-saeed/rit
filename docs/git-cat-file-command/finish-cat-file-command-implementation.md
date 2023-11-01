@@ -34,7 +34,7 @@ fn cmd_cat_file(object_type: git_object::GitObjectType, object_hash: String) -> 
     let repo = GitRepository::find(&current_directory)?;
 
     let object = git_object::read(&repo, repo.find_object(object_type, object_hash))?;
-    println!("{}", object.serialize());
+    print!("{}", object.serialize()); // Don't use println! here
     Ok(())
 }
 ```
