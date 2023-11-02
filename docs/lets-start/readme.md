@@ -28,6 +28,5 @@ Add these crates to the project's dependencies:
 clap = { version = "4.4.6", features = ["cargo"] }
 configparser = "3.0.2"
 flate2 = "1.0.28"
-sha1 = "0.10.6"
 
 ```

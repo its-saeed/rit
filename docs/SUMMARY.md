@@ -25,3 +25,4 @@
 * [Implement read function](git-cat-file-command/implement-read-function.md)
 * [Update argument parser](git-cat-file-command/update-argument-parser.md)
 * [Finish cat-file command implementation](git-cat-file-command/finish-cat-file-command-implementation.md)
+* [The hash-object command](git-cat-file-command/the-hash-object-command.md)
