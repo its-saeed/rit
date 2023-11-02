@@ -1,13 +1,16 @@
 use std::{
     fs::{self},
-    io::{BufReader, Read},
+    io::{BufReader, BufWriter, Read, Write},
     str::FromStr,
 };
 
 use anyhow::Context;
-use flate2::bufread::ZlibDecoder;
+use flate2::{bufread::ZlibDecoder, read::ZlibEncoder, Compression};
 
-use crate::{error::ObjectParseError, repository::GitRepository};
+use crate::{
+    error::{ObjectCreateError, ObjectParseError},
+    repository::GitRepository,
+};
 
 #[derive(PartialEq, PartialOrd, Debug, Clone, Copy)]
 pub enum GitObjectType {
@@ -27,6 +30,17 @@ impl FromStr for GitObjectType {
             "tag" => Ok(GitObjectType::Tag),
             "blob" => Ok(GitObjectType::Blob),
             _ => Err(ObjectParseError::InvalidObjectType),
+        }
+    }
+}
+
+impl ToString for GitObjectType {
+    fn to_string(&self) -> String {
+        match self {
+            GitObjectType::Commit => "commit".to_string(),
+            GitObjectType::Tree => "tree".to_string(),
+            GitObjectType::Tag => "tag".to_string(),
+            GitObjectType::Blob => "blob".to_string(),
         }
     }
 }
@@ -110,6 +124,60 @@ pub fn read(repo: &GitRepository, sha: String) -> Result<Box<dyn GitObject>, Obj
         GitObjectType::Tag => Ok(Box::new(read_tag_object(&mut buffer, object_header)?)),
         GitObjectType::Blob => Ok(Box::new(read_blob_object(&mut buffer, object_header)?)),
     }
+}
+
+pub fn create(
+    filename: String,
+    object_type: GitObjectType,
+) -> Result<(String, String), ObjectCreateError> {
+    let input_data = std::fs::read_to_string(filename)?;
+    let serialized = match object_type {
+        GitObjectType::Commit => todo!(),
+        GitObjectType::Tree => todo!(),
+        GitObjectType::Tag => todo!(),
+        GitObjectType::Blob => {
+            let object = BlobObject { blob: input_data };
+            object.serialize()
+        }
+    };
+
+    let buffer = Vec::<u8>::new();
+    let mut buf_writer = BufWriter::new(buffer);
+    write!(
+        buf_writer,
+        "{} {}\x00{}",
+        object_type.to_string(),
+        serialized.len(),
+        serialized
+    )?;
+
+    buf_writer.flush()?;
+    let buffer = buf_writer
+        .into_inner()
+        .context("Failed to take buffer out of buf writer")?;
+    let hash = sha1_smol::Sha1::from(&buffer).hexdigest();
+    Ok((hash, String::from_utf8(buffer)?))
+}
+
+pub fn write(
+    repo: GitRepository,
+    filename: String,
+    object_type: GitObjectType,
+) -> Result<String, ObjectCreateError> {
+    let (hash, data) = create(filename, object_type)?;
+    let file_path = repo.directory_manager.sha_to_file_path(&hash);
+
+    std::fs::create_dir_all(
+        file_path
+            .parent()
+            .context("Failed to get the parent directory")?,
+    )?;
+
+    let mut z = ZlibEncoder::new(data.as_bytes(), Compression::fast());
+    let mut buffer = Vec::new();
+    z.read_to_end(&mut buffer)?;
+    std::fs::write(file_path, buffer)?;
+    Ok(hash)
 }
 
 fn read_blob_object(

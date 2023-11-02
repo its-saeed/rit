@@ -61,3 +61,15 @@ pub enum ObjectParseError {
     #[error(transparent)]
     IoError(#[from] std::io::Error),
 }
+
+#[derive(Debug, Error)]
+pub enum ObjectCreateError {
+    #[error(transparent)]
+    Utf8Error(#[from] std::string::FromUtf8Error),
+
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
+
+    #[error(transparent)]
+    UnexpectedError(#[from] anyhow::Error),
+}

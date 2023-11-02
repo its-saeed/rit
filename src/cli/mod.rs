@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use clap::{command, Arg, Command as ClapCommand};
+use clap::{command, Arg, ArgAction, Command as ClapCommand};
 
 use crate::{error::ParseArgumentsError, git_object::GitObjectType};
 
@@ -11,6 +11,11 @@ pub enum Command {
     CatFile {
         object_type: GitObjectType,
         object_hash: String,
+    },
+    HashObject {
+        object_type: GitObjectType,
+        filename: String,
+        write: bool,
     },
 }
 
@@ -24,6 +29,24 @@ pub fn parse_args() -> Result<Command, ParseArgumentsError> {
                 .arg(Arg::new("type").value_name("TYPE").required(true))
                 .arg(Arg::new("object").value_name("OBJECT").required(true)),
         )
+        .subcommand(
+            ClapCommand::new("hash-object")
+                .about("Compute object ID and optionally creates a blob from a file")
+                .arg(
+                    Arg::new("write")
+                        .short('w')
+                        .long("write")
+                        .action(ArgAction::SetTrue),
+                )
+                .arg(
+                    Arg::new("type")
+                        .value_name("TYPE")
+                        .short('t')
+                        .long("type")
+                        .default_value("blob"),
+                )
+                .arg(Arg::new("file").value_name("FILE").required(true)),
+        )
         .get_matches();
 
     if let Some(subcommand) = matches.subcommand_matches("init") {
@@ -35,6 +58,15 @@ pub fn parse_args() -> Result<Command, ParseArgumentsError> {
         Ok(Command::CatFile {
             object_type: object_type.parse()?,
             object_hash,
+        })
+    } else if let Some(subcommand) = matches.subcommand_matches("hash-object") {
+        let filename: String = subcommand.get_one::<String>("file").unwrap().clone();
+        let object_type = subcommand.get_one::<String>("type").unwrap();
+        let write = subcommand.get_flag("write");
+        Ok(Command::HashObject {
+            filename,
+            object_type: object_type.parse()?,
+            write,
         })
     } else {
         Err(anyhow!("Argument parse failed"))?
