@@ -219,18 +219,22 @@ So please don't forget to add `sha1_smol` crate to your Cargo.toml file under \[
 sha1_smol = { version = "1.0.0", features = ["std"] }
 ```
 
-### Implement ToString for GitObjectType
+### Implement Display for GitObjectType
+
+According to the Rust doc, Implementing this trait for a type will automatically implement the [`ToString`](https://vscode-file/vscode-app/usr/share/code/resources/app/out/vs/code/electron-sandbox/workbench/workbench.html) trait for the type, allowing the usage of the [`.to_string()`](https://vscode-file/vscode-app/usr/share/code/resources/app/out/vs/code/electron-sandbox/workbench/workbench.html) method. Prefer implementing the `Display` trait for a type, rather than [`ToString`](https://vscode-file/vscode-app/usr/share/code/resources/app/out/vs/code/electron-sandbox/workbench/workbench.html)
 
 {% code title="src/git_object.rs" lineNumbers="true" %}
 ```rust
-impl ToString for GitObjectType {
-    fn to_string(&self) -> String {
-        match self {
-            GitObjectType::Commit => "commit".to_string(),
-            GitObjectType::Tree => "tree".to_string(),
-            GitObjectType::Tag => "tag".to_string(),
-            GitObjectType::Blob => "blob".to_string(),
-        }
+impl Display for Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let string = match self {
+            Type::Commit => "commit",
+            Type::Tree => "tree",
+            Type::Tag => "tag",
+            Type::Blob => "blob",
+        };
+
+        write!(f, "{}", string)
     }
 }
 ```

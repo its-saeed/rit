@@ -26,3 +26,12 @@
 * [Update argument parser](git-cat-file-command/update-argument-parser.md)
 * [Finish cat-file command implementation](git-cat-file-command/finish-cat-file-command-implementation.md)
 * [The hash-object command](git-cat-file-command/the-hash-object-command.md)
+
+## Refactor
+
+* [Split error types](refactor/split-error-types.md)
+* [Split git\_object module](refactor/split-git\_object-module.md)
+* [Add SerializedGitObject](refactor/add-serializedgitobject.md)
+* [Add CompressedGitObject](refactor/add-compressedgitobject.md)
+* [Move read and write objects to repository module](refactor/move-read-and-write-objects-to-repository-module.md)
+* [Move each git object to separate file](refactor/move-each-git-object-to-separate-file.md)
