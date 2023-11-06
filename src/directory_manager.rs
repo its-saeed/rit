@@ -52,8 +52,18 @@ impl DirectoryManager {
         Ok(())
     }
 
-    pub fn sha_to_file_path(&self, sha: &str) -> PathBuf {
-        self.objects_path.join(&sha[0..2]).join(&sha[2..])
+    // TODO: Change error type
+    pub fn sha_to_file_path(
+        &self,
+        sha: &str,
+        create_parent_path: bool,
+    ) -> Result<PathBuf, std::io::Error> {
+        let path = self.objects_path.join(&sha[0..2]).join(&sha[2..]);
+        if create_parent_path {
+            std::fs::create_dir_all(path.parent().ok_or(std::io::ErrorKind::NotFound)?)?;
+        }
+
+        Ok(path)
     }
 }
 
@@ -119,7 +129,9 @@ mod tests {
     fn sha_to_file_path_should_return_correct_path() {
         let dir_manager = DirectoryManager::new(PROJECT_DIR);
 
-        let file_path = dir_manager.sha_to_file_path("e673d1b7eaa0aa01b5bc2442d570a765bdaae751");
+        let file_path = dir_manager
+            .sha_to_file_path("e673d1b7eaa0aa01b5bc2442d570a765bdaae751", false)
+            .unwrap();
         assert_eq!(
             file_path,
             PathBuf::from(format!(

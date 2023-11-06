@@ -1,7 +1,9 @@
+use std::path::PathBuf;
+
 use anyhow::anyhow;
 use clap::{command, Arg, ArgAction, Command as ClapCommand};
 
-use crate::{error::ParseArgumentsError, git_object::GitObjectType};
+use crate::{error::ParseArgumentsError, git_object::Type};
 
 #[derive(Debug)]
 pub enum Command {
@@ -9,12 +11,12 @@ pub enum Command {
         path: String,
     },
     CatFile {
-        object_type: GitObjectType,
+        object_type: Type,
         object_hash: String,
     },
     HashObject {
-        object_type: GitObjectType,
-        filename: String,
+        object_type: Type,
+        file_path: PathBuf,
         write: bool,
     },
 }
@@ -64,7 +66,7 @@ pub fn parse_args() -> Result<Command, ParseArgumentsError> {
         let object_type = subcommand.get_one::<String>("type").unwrap();
         let write = subcommand.get_flag("write");
         Ok(Command::HashObject {
-            filename,
+            file_path: PathBuf::from(filename),
             object_type: object_type.parse()?,
             write,
         })

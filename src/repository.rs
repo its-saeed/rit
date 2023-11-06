@@ -1,8 +1,17 @@
-use std::path::{Path, PathBuf};
+use std::{
+    fs::File,
+    io::BufReader,
+    path::{Path, PathBuf},
+};
 
 use anyhow::Context;
 
-use crate::{error::CreateRepoError, git_config::GitConfig, git_object, DirectoryManager};
+use crate::{
+    error::{CreateRepoError, ObjectCreateError, ObjectParseError},
+    git_config::GitConfig,
+    git_object::{self, CompressedGitObject, SerializedGitObject, Type},
+    DirectoryManager, GitObject,
+};
 
 #[derive(Debug)]
 pub struct GitRepository {
@@ -69,8 +78,44 @@ impl GitRepository {
         })
     }
 
-    pub fn find_object(&self, _object_type: git_object::GitObjectType, name: String) -> String {
+    pub fn find_object(&self, _object_type: git_object::Type, name: String) -> String {
         name
+    }
+
+    pub fn read_object(&self, sha: String) -> Result<Box<dyn GitObject>, ObjectParseError> {
+        let real_file_path = self.directory_manager.sha_to_file_path(&sha, false)?;
+        let file = File::open(real_file_path)?;
+        let buf_reader = BufReader::new(file);
+
+        let serialized: SerializedGitObject = CompressedGitObject::decompress(buf_reader)?;
+
+        serialized.try_into()
+    }
+
+    pub fn write_object(
+        &self,
+        file_path: &Path,
+        object_type: Type,
+    ) -> Result<String, ObjectCreateError> {
+        let serialized_object = Self::create_object(file_path, object_type)?;
+
+        let file_path = self
+            .directory_manager
+            .sha_to_file_path(&serialized_object.hash, true)?;
+
+        std::fs::write(
+            file_path,
+            CompressedGitObject::try_from(&serialized_object)?,
+        )?;
+        Ok(serialized_object.hash)
+    }
+
+    pub fn create_object(
+        file_path: &Path,
+        object_type: Type,
+    ) -> Result<SerializedGitObject, ObjectCreateError> {
+        let buf_reader = BufReader::new(File::open(file_path)?);
+        SerializedGitObject::serialize(buf_reader, object_type)
     }
 }
 

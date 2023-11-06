@@ -7,3 +7,4 @@ pub mod repository;
 
 pub use cli::*;
 pub use directory_manager::DirectoryManager;
+pub use git_object::GitObject;

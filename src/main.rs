@@ -1,8 +1,15 @@
+use std::path::Path;
+
 use anyhow::{Ok, Result};
-use rit::{git_object, parse_args, repository::GitRepository, Command};
+use rit::{
+    git_object::{self},
+    parse_args,
+    repository::GitRepository,
+    Command,
+};
 
 fn main() -> Result<()> {
-    let command = parse_args().unwrap();
+    let command = parse_args()?;
     match command {
         Command::Init { path } => {
             GitRepository::create(path)?;
@@ -15,37 +22,33 @@ fn main() -> Result<()> {
         }
         Command::HashObject {
             object_type,
-            filename,
+            file_path,
             write,
         } => {
-            cmd_hash_object(filename, object_type, write)?;
+            cmd_hash_object(&file_path, object_type, write)?;
         }
     };
 
     Ok(())
 }
 
-fn cmd_cat_file(object_type: git_object::GitObjectType, object_hash: String) -> Result<()> {
+fn cmd_cat_file(object_type: git_object::Type, object_hash: String) -> Result<()> {
     let current_directory = std::env::current_dir()?;
     let repo = GitRepository::find(&current_directory)?;
 
-    let object = git_object::read(&repo, repo.find_object(object_type, object_hash))?;
+    let object = repo.read_object(repo.find_object(object_type, object_hash))?;
     print!("{}", object.serialize());
     Ok(())
 }
 
-fn cmd_hash_object(
-    filename: String,
-    object_type: git_object::GitObjectType,
-    write: bool,
-) -> Result<()> {
+fn cmd_hash_object(file_path: &Path, object_type: git_object::Type, write: bool) -> Result<()> {
     let hash = if write {
         let current_directory = std::env::current_dir()?;
         let repo = GitRepository::find(&current_directory)?;
-        git_object::write(repo, filename, object_type)?
+        repo.write_object(file_path, object_type)?
     } else {
-        let (hash, _) = git_object::create(filename, object_type)?;
-        hash
+        let object = GitRepository::create_object(file_path, object_type)?;
+        object.hash
     };
 
     println!("{hash}");
