@@ -18,6 +18,9 @@ pub enum ObjectParseError {
 
     #[error(transparent)]
     IoError(#[from] std::io::Error),
+
+    #[error(transparent)]
+    KvlParseError(#[from] KvlParseError),
 }
 
 #[derive(Debug, Error)]
@@ -30,4 +33,13 @@ pub enum ObjectCreateError {
 
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
+}
+
+#[derive(Debug, Error)]
+pub enum KvlParseError {
+    #[error("Failed to get the next line of the kvl")]
+    FailedToGetNextLine,
+
+    #[error("Failed to find the delimiter fo key/value")]
+    KeyDelimiterNotFound,
 }

@@ -1,5 +1,5 @@
 use std::{
-    fs::File,
+    fs::{self, File},
     io::BufReader,
     path::{Path, PathBuf},
 };
@@ -78,12 +78,22 @@ impl GitRepository {
         })
     }
 
-    pub fn find_object(&self, _object_type: git_object::Type, name: String) -> String {
-        name
+    pub fn find_object(
+        &self,
+        object_type: git_object::Type,
+        name: String,
+    ) -> Result<String, anyhow::Error> {
+        if name == "HEAD" && object_type == git_object::Type::Commit {
+            let hash = fs::read_to_string(self.directory_manager.refs_heads_path.join("master"))
+                .context("Can't open refs/heads/master file")?;
+            Ok(hash.trim_end().to_string())
+        } else {
+            Ok(name)
+        }
     }
 
-    pub fn read_object(&self, sha: String) -> Result<Box<dyn GitObject>, ObjectParseError> {
-        let real_file_path = self.directory_manager.sha_to_file_path(&sha, false)?;
+    pub fn read_object(&self, sha: &str) -> Result<GitObject, ObjectParseError> {
+        let real_file_path = self.directory_manager.sha_to_file_path(sha, false)?;
         let file = File::open(real_file_path)?;
         let buf_reader = BufReader::new(file);
 

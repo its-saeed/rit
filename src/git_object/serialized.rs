@@ -6,7 +6,7 @@ use crate::{
     GitObject,
 };
 
-use super::{Blob, Commit, Header, Tag, Tree, Type};
+use super::{Blob, Header, Type};
 
 pub struct SerializedGitObject {
     raw: String,
@@ -62,18 +62,12 @@ impl SerializedGitObject {
     }
 }
 
-impl TryInto<Box<dyn GitObject>> for SerializedGitObject {
+impl TryInto<GitObject> for SerializedGitObject {
     type Error = ObjectParseError;
 
-    fn try_into(self) -> Result<Box<dyn GitObject>, Self::Error> {
+    fn try_into(self) -> Result<GitObject, Self::Error> {
         let mut buffer = self.raw.as_bytes();
         let object_header = Header::load(&mut buffer)?;
-
-        match object_header.object_type {
-            Type::Commit => Ok(Box::new(Commit::deserialize(&mut buffer, object_header)?)),
-            Type::Tree => Ok(Box::new(Tree::deserialize(&mut buffer, object_header)?)),
-            Type::Tag => Ok(Box::new(Tag::deserialize(&mut buffer, object_header)?)),
-            Type::Blob => Ok(Box::new(Blob::deserialize(&mut buffer, object_header)?)),
-        }
+        GitObject::deserialize(&mut buffer, object_header)
     }
 }

@@ -19,6 +19,10 @@ pub enum Command {
         file_path: PathBuf,
         write: bool,
     },
+    Log {
+        commit: String,
+        n_logs: u32, // Number of logs to show
+    },
 }
 
 pub fn parse_args() -> Result<Command, ParseArgumentsError> {
@@ -49,6 +53,24 @@ pub fn parse_args() -> Result<Command, ParseArgumentsError> {
                 )
                 .arg(Arg::new("file").value_name("FILE").required(true)),
         )
+        .subcommand(
+            ClapCommand::new("log")
+                .about("Display history of given commit")
+                .arg(
+                    Arg::new("commit")
+                        .value_name("COMMIT")
+                        .default_value("HEAD")
+                        .help("Commit to start at."),
+                )
+                .arg(
+                    Arg::new("n")
+                        .value_name("NUMBER")
+                        .short('n')
+                        .default_value("5")
+                        .value_parser(clap::value_parser!(u32))
+                        .help("Number of logs to show"),
+                ),
+        )
         .get_matches();
 
     if let Some(subcommand) = matches.subcommand_matches("init") {
@@ -70,6 +92,10 @@ pub fn parse_args() -> Result<Command, ParseArgumentsError> {
             object_type: object_type.parse()?,
             write,
         })
+    } else if let Some(subcommand) = matches.subcommand_matches("log") {
+        let commit: String = subcommand.get_one::<String>("commit").unwrap().clone();
+        let n_logs: u32 = *subcommand.get_one::<u32>("n").unwrap();
+        Ok(Command::Log { commit, n_logs })
     } else {
         Err(anyhow!("Argument parse failed"))?
     }

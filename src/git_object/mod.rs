@@ -16,17 +16,36 @@ pub use tree::*;
 
 use crate::error::ObjectParseError;
 
-pub trait GitObject {
-    fn get_type() -> Type
-    where
-        Self: Sized;
+#[derive(Debug)]
+pub enum GitObject {
+    Commit(Commit),
+    Blob(Blob),
+    Tag(Tag),
+    Tree(Tree),
+}
 
-    fn serialize(&self) -> String;
+impl GitObject {
+    pub fn serialize(&self) -> String {
+        match self {
+            GitObject::Commit(commit) => commit.serialize(),
+            GitObject::Blob(blob) => blob.serialize(),
+            GitObject::Tag(_) => todo!(),
+            GitObject::Tree(_) => todo!(),
+        }
+    }
 
     fn deserialize(
         buf_reader: &mut impl std::io::BufRead,
         object_header: Header,
-    ) -> Result<Self, ObjectParseError>
-    where
-        Self: Sized;
+    ) -> Result<Self, ObjectParseError> {
+        match object_header.object_type {
+            Type::Commit => Ok(Self::Commit(Commit::deserialize(
+                buf_reader,
+                object_header,
+            )?)),
+            Type::Tree => todo!(),
+            Type::Tag => todo!(),
+            Type::Blob => Ok(Self::Blob(Blob::deserialize(buf_reader, object_header)?)),
+        }
+    }
 }
