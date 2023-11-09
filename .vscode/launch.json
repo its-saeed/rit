@@ -38,7 +38,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["cat-file", "blob", "e1604acb3533c622cff1b8747d1c98841d81cfa5"],
+            "args": ["log"],
             "cwd": "${workspaceFolder}"
         },
         {
