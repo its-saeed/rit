@@ -2,44 +2,7 @@
 
 git\_object is going to be a big module. So let's create a folder for it. Create a folder, `git_object` and move `git_object.rs` to `git_object/mod.rs`
 
-The final content of mod.rs is:
-
-```rust
-pub mod blob;
-pub mod commit;
-pub mod compressed;
-pub mod header;
-pub mod serialized;
-pub mod tag;
-pub mod tree;
-
-pub use blob::*;
-pub use commit::*;
-pub use compressed::*;
-pub use header::*;
-pub use serialized::*;
-pub use tag::*;
-pub use tree::*;
-
-use crate::error::ObjectParseError;
-
-pub trait GitObject {
-    fn get_type() -> Type
-    where
-        Self: Sized;
-
-    fn serialize(&self) -> String;
-
-    fn deserialize(
-        buf_reader: &mut impl std::io::BufRead,
-        object_header: Header,
-    ) -> Result<Self, ObjectParseError>
-    where
-        Self: Sized;
-}
-```
-
-The rest is moved to new modules. Add this pub use to `src/lib.rs`:
+Add this pub use to `src/lib.rs`:
 
 ```rust
 pub use git_object::GitObject;

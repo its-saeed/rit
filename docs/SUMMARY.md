@@ -34,4 +34,10 @@
 * [Add SerializedGitObject](refactor/add-serializedgitobject.md)
 * [Add CompressedGitObject](refactor/add-compressedgitobject.md)
 * [Move read and write objects to repository module](refactor/move-read-and-write-objects-to-repository-module.md)
+* [Change GitObject to an enum](refactor/change-gitobject-to-an-enum.md)
 * [Move each git object to separate file](refactor/move-each-git-object-to-separate-file.md)
+
+## Reading commit history
+
+* [Parsing commits](reading-commit-history/parsing-commits.md)
+* [Update Argument parser](reading-commit-history/update-argument-parser.md)
