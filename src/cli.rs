@@ -5,6 +5,8 @@ use clap::{command, Arg, ArgAction, Command as ClapCommand};
 
 use crate::{error::ParseArgumentsError, git_object::Type};
 
+type Sha1 = String;
+
 #[derive(Debug)]
 pub enum Command {
     Init {
@@ -12,7 +14,7 @@ pub enum Command {
     },
     CatFile {
         object_type: Type,
-        object_hash: String,
+        object_hash: Sha1,
     },
     HashObject {
         object_type: Type,
@@ -20,8 +22,16 @@ pub enum Command {
         write: bool,
     },
     Log {
-        commit: String,
+        commit: Sha1,
         n_logs: u32, // Number of logs to show
+    },
+    LsTree {
+        recursive: bool,
+        tree: Sha1,
+    },
+    Checkout {
+        commit: Sha1,
+        path: String,
     },
 }
 
@@ -71,32 +81,19 @@ pub fn parse_args() -> Result<Command, ParseArgumentsError> {
                         .help("Number of logs to show"),
                 ),
         )
-        .get_matches();
-
-    if let Some(subcommand) = matches.subcommand_matches("init") {
-        let path = subcommand.get_one::<String>("path").unwrap().clone();
-        Ok(Command::Init { path })
-    } else if let Some(subcommand) = matches.subcommand_matches("cat-file") {
-        let object_type: String = subcommand.get_one::<String>("type").unwrap().clone();
-        let object_hash = subcommand.get_one::<String>("object").unwrap().clone();
-        Ok(Command::CatFile {
-            object_type: object_type.parse()?,
-            object_hash,
-        })
-    } else if let Some(subcommand) = matches.subcommand_matches("hash-object") {
-        let filename: String = subcommand.get_one::<String>("file").unwrap().clone();
-        let object_type = subcommand.get_one::<String>("type").unwrap();
-        let write = subcommand.get_flag("write");
-        Ok(Command::HashObject {
-            file_path: PathBuf::from(filename),
-            object_type: object_type.parse()?,
-            write,
-        })
-    } else if let Some(subcommand) = matches.subcommand_matches("log") {
-        let commit: String = subcommand.get_one::<String>("commit").unwrap().clone();
-        let n_logs: u32 = *subcommand.get_one::<u32>("n").unwrap();
-        Ok(Command::Log { commit, n_logs })
-    } else {
-        Err(anyhow!("Argument parse failed"))?
-    }
-}
+        .subcommand(
+            ClapCommand::new("ls-tree")
+                .about("Pretty-print a tree object.")
+                .arg(
+                    Arg::new("recursive")
+                        .short('r')
+                        .long("recursive")
+                        .help("Recurse into sub-trees")
+                        .action(ArgAction::SetTrue),
+                )
+                .arg(
+                    Arg::new("tree")
+                        .value_name("TREE")
+                        .help("A tree-ish object"),
+                ),
+        )

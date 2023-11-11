@@ -12,8 +12,8 @@ pub struct CompressedGitObject {
 impl CompressedGitObject {
     pub fn decompress(buf_reader: impl BufRead) -> Result<SerializedGitObject, ObjectParseError> {
         let mut zlib = ZlibDecoder::new(buf_reader);
-        let mut buffer = String::new();
-        zlib.read_to_string(&mut buffer)?;
+        let mut buffer = vec![];
+        zlib.read_to_end(&mut buffer)?;
         Ok(SerializedGitObject::new(buffer))
     }
 }

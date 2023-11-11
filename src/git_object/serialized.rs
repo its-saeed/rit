@@ -9,7 +9,7 @@ use crate::{
 use super::{Blob, Header, Type};
 
 pub struct SerializedGitObject {
-    raw: String,
+    raw: Vec<u8>,
     pub hash: String,
 }
 
@@ -20,7 +20,7 @@ impl AsRef<[u8]> for SerializedGitObject {
 }
 
 impl SerializedGitObject {
-    pub fn new(raw: String) -> Self {
+    pub fn new(raw: Vec<u8>) -> Self {
         Self {
             hash: sha1_smol::Sha1::from(&raw).hexdigest(),
             raw,
@@ -58,7 +58,7 @@ impl SerializedGitObject {
             .into_inner()
             .context("Failed to take buffer out of buf writer")?;
 
-        Ok(SerializedGitObject::new(String::from_utf8(buffer)?))
+        Ok(SerializedGitObject::new(buffer))
     }
 }
 
@@ -66,7 +66,7 @@ impl TryInto<GitObject> for SerializedGitObject {
     type Error = ObjectParseError;
 
     fn try_into(self) -> Result<GitObject, Self::Error> {
-        let mut buffer = self.raw.as_bytes();
+        let mut buffer = self.raw.as_ref();
         let object_header = Header::load(&mut buffer)?;
         GitObject::deserialize(&mut buffer, object_header)
     }
