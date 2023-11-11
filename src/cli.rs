@@ -97,3 +97,54 @@ pub fn parse_args() -> Result<Command, ParseArgumentsError> {
                         .help("A tree-ish object"),
                 ),
         )
+        .subcommand(
+            ClapCommand::new("checkout")
+                .about("Checkout a commit inside a directory")
+                .arg(
+                    Arg::new("commit")
+                        .value_name("COMMIT")
+                        .help("The commit or tree to checkout"),
+                )
+                .arg(
+                    Arg::new("path")
+                        .value_name("PATH")
+                        .help("An EMPTY directory to checkout on"),
+                ),
+        )
+        .get_matches();
+
+    if let Some(subcommand) = matches.subcommand_matches("init") {
+        let path = subcommand.get_one::<String>("path").unwrap().clone();
+        Ok(Command::Init { path })
+    } else if let Some(subcommand) = matches.subcommand_matches("cat-file") {
+        let object_type: String = subcommand.get_one::<String>("type").unwrap().clone();
+        let object_hash = subcommand.get_one::<String>("object").unwrap().clone();
+        Ok(Command::CatFile {
+            object_type: object_type.parse()?,
+            object_hash,
+        })
+    } else if let Some(subcommand) = matches.subcommand_matches("hash-object") {
+        let filename: String = subcommand.get_one::<String>("file").unwrap().clone();
+        let object_type = subcommand.get_one::<String>("type").unwrap();
+        let write = subcommand.get_flag("write");
+        Ok(Command::HashObject {
+            file_path: PathBuf::from(filename),
+            object_type: object_type.parse()?,
+            write,
+        })
+    } else if let Some(subcommand) = matches.subcommand_matches("log") {
+        let commit: String = subcommand.get_one::<String>("commit").unwrap().clone();
+        let n_logs: u32 = *subcommand.get_one::<u32>("n").unwrap();
+        Ok(Command::Log { commit, n_logs })
+    } else if let Some(subcommand) = matches.subcommand_matches("ls-tree") {
+        let tree: String = subcommand.get_one::<String>("tree").unwrap().clone();
+        let recursive = subcommand.get_flag("recursive");
+        Ok(Command::LsTree { tree, recursive })
+    } else if let Some(subcommand) = matches.subcommand_matches("checkout") {
+        let commit: String = subcommand.get_one::<String>("commit").unwrap().clone();
+        let path = subcommand.get_one::<String>("path").unwrap().clone();
+        Ok(Command::Checkout { commit, path })
+    } else {
+        Err(anyhow!("Argument parse failed"))?
+    }
+}

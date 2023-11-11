@@ -1,3 +1,11 @@
+use std::fmt::Display;
+
+use anyhow::Context;
+
+use crate::error::TreeLeafParseError;
+
+use super::mode::{Mode, Type};
+
 #[derive(Debug)]
 pub struct Leaf {
     pub mode: Mode,
@@ -35,3 +43,14 @@ impl Leaf {
             hex::encode(hash),
         )
     }
+
+    pub fn get_type(&self) -> Type {
+        self.mode.type_
+    }
+}
+
+impl Display for Leaf {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {}\t{}", self.mode, self.hash, self.path)
+    }
+}

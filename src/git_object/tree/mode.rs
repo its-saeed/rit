@@ -1,3 +1,7 @@
+use std::{fmt::Display, str::FromStr, usize};
+
+use crate::error::TreeLeafParseError;
+
 #[derive(Debug, Clone, Copy)]
 pub enum Type {
     Tree = 4,
@@ -17,6 +21,19 @@ impl FromStr for Type {
             "16" => Ok(Self::Submodule),
             _ => Err(TreeLeafParseError::InvalidFileMode),
         }
+    }
+}
+
+impl Display for Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let str = match self {
+            Type::Tree => "tree",
+            Type::RegularFile => "blob",
+            Type::SymbolicLink => "blob",
+            Type::Submodule => "commit",
+        };
+
+        write!(f, "{}", str)
     }
 }
 
@@ -40,5 +57,11 @@ impl Mode {
             file_permissions: mode,
             type_,
         })
+    }
+}
+
+impl Display for Mode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {}", self.type_, self.file_permissions)
     }
 }
