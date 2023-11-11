@@ -43,7 +43,7 @@ impl GitObject {
                 buf_reader,
                 object_header,
             )?)),
-            Type::Tree => todo!(),
+            Type::Tree => Ok(Self::Tree(Tree::deserialize(buf_reader, object_header)?)),
             Type::Tag => todo!(),
             Type::Blob => Ok(Self::Blob(Blob::deserialize(buf_reader, object_header)?)),
         }

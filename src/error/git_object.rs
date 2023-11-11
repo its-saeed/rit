@@ -21,6 +21,9 @@ pub enum ObjectParseError {
 
     #[error(transparent)]
     KvlParseError(#[from] KvlParseError),
+
+    #[error(transparent)]
+    TreeLeafParseError(#[from] TreeLeafParseError),
 }
 
 #[derive(Debug, Error)]
@@ -42,4 +45,16 @@ pub enum KvlParseError {
 
     #[error("Failed to find the delimiter fo key/value")]
     KeyDelimiterNotFound,
+}
+
+#[derive(Debug, Error)]
+pub enum TreeLeafParseError {
+    #[error("Invalid file mode")]
+    InvalidFileMode,
+
+    #[error(transparent)]
+    Utf8Error(#[from] std::string::FromUtf8Error),
+
+    #[error(transparent)]
+    UnexpectedError(#[from] anyhow::Error),
 }
