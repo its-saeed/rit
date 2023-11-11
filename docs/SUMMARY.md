@@ -40,4 +40,8 @@
 ## Reading commit history
 
 * [Parsing commits](reading-commit-history/parsing-commits.md)
-* [Update Argument parser](reading-commit-history/update-argument-parser.md)
+* [Add log command](reading-commit-history/add-log-command.md)
+* [A few more refactors and fixes](reading-commit-history/a-few-more-refactors-and-fixes.md)
+* [Start parsing tree objects](reading-commit-history/start-parsing-tree-objects.md)
+* [Add ls-tree](reading-commit-history/add-ls-tree.md)
+* [Add checkout command](reading-commit-history/add-checkout-command.md)
