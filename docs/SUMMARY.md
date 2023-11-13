@@ -45,3 +45,7 @@
 * [Start parsing tree objects](reading-commit-history/start-parsing-tree-objects.md)
 * [Add ls-tree](reading-commit-history/add-ls-tree.md)
 * [Add checkout command](reading-commit-history/add-checkout-command.md)
+
+## Refs, tags and branches
+
+* [Implement show-ref command](refs-tags-and-branches/implement-show-ref-command.md)
