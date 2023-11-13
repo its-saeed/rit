@@ -33,6 +33,7 @@ pub enum Command {
         commit: Sha1,
         path: String,
     },
+    ShowRef,
 }
 
 pub fn parse_args() -> Result<Command, ParseArgumentsError> {
@@ -111,6 +112,7 @@ pub fn parse_args() -> Result<Command, ParseArgumentsError> {
                         .help("An EMPTY directory to checkout on"),
                 ),
         )
+        .subcommand(ClapCommand::new("show-ref").about("List references."))
         .get_matches();
 
     if let Some(subcommand) = matches.subcommand_matches("init") {
@@ -144,6 +146,8 @@ pub fn parse_args() -> Result<Command, ParseArgumentsError> {
         let commit: String = subcommand.get_one::<String>("commit").unwrap().clone();
         let path = subcommand.get_one::<String>("path").unwrap().clone();
         Ok(Command::Checkout { commit, path })
+    } else if let Some(_) = matches.subcommand_matches("show-ref") {
+        Ok(Command::ShowRef)
     } else {
         Err(anyhow!("Argument parse failed"))?
     }

@@ -22,3 +22,15 @@ pub enum CreateRepoError {
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
 }
+
+#[derive(Debug, Error)]
+pub enum ResolveRefError {
+    #[error("Relative path {0} is not a file")]
+    RelativePathIsNotAFile(String),
+
+    #[error(transparent)]
+    IoError(#[from] std::io::Error),
+
+    #[error(transparent)]
+    UnexpectedError(#[from] anyhow::Error),
+}

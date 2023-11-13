@@ -12,6 +12,7 @@ pub struct DirectoryManager {
     pub head_file: PathBuf,
     pub branches_path: PathBuf,
     pub objects_path: PathBuf,
+    pub refs_path: PathBuf,
     pub refs_tags_path: PathBuf,
     pub refs_heads_path: PathBuf,
 }
@@ -28,6 +29,7 @@ impl DirectoryManager {
             head_file: dot_git_path.join("HEAD"),
             branches_path: dot_git_path.join("branches"),
             objects_path: dot_git_path.join("objects"),
+            refs_path: dot_git_path.join("refs"),
             refs_tags_path: dot_git_path.join("refs").join("tags"),
             refs_heads_path: dot_git_path.join("refs").join("heads"),
             dot_git_path,

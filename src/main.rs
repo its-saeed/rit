@@ -27,7 +27,19 @@ fn main() -> Result<()> {
         Command::Log { commit, n_logs } => cmd_log(commit, n_logs)?,
         Command::LsTree { recursive, tree } => cmd_ls_tree(&tree, recursive, PathBuf::new())?,
         Command::Checkout { commit, path } => cmd_checkout(commit, PathBuf::from(path))?,
+        Command::ShowRef => cmd_show_ref()?,
     };
+
+    Ok(())
+}
+
+fn cmd_show_ref() -> Result<()> {
+    let current_directory = std::env::current_dir()?;
+    let repo = GitRepository::find(&current_directory)?;
+    let refs = repo.list_refs()?;
+    for ref_item in refs {
+        println!("{}", ref_item);
+    }
 
     Ok(())
 }

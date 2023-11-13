@@ -1,17 +1,19 @@
+pub mod refs;
+
+use crate::{
+    error::{repository::ResolveRefError, CreateRepoError, ObjectCreateError, ObjectParseError},
+    git_config::GitConfig,
+    git_object::{self, CompressedGitObject, SerializedGitObject, Type},
+    DirectoryManager, GitObject,
+};
+
 use std::{
-    fs::{self, File},
+    fs::File,
     io::BufReader,
     path::{Path, PathBuf},
 };
 
 use anyhow::Context;
-
-use crate::{
-    error::{CreateRepoError, ObjectCreateError, ObjectParseError},
-    git_config::GitConfig,
-    git_object::{self, CompressedGitObject, SerializedGitObject, Type},
-    DirectoryManager, GitObject,
-};
 
 #[derive(Debug)]
 pub struct GitRepository {
@@ -20,6 +22,13 @@ pub struct GitRepository {
 }
 
 impl GitRepository {
+    pub fn new(config: GitConfig, directory_manager: DirectoryManager) -> Self {
+        Self {
+            config,
+            directory_manager,
+        }
+    }
+
     /// Load an existing repository.
     pub fn load<T: Into<PathBuf>>(base_path: T) -> Result<Self, CreateRepoError> {
         GitRepository::try_from(DirectoryManager::new(base_path))
@@ -72,21 +81,20 @@ impl GitRepository {
         std::fs::write(&directory_manager.config_file, GitConfig::default_str())
             .context("Failed to write to .git/config")?;
 
-        Ok(Self {
-            directory_manager,
-            config: GitConfig::default(),
-        })
+        Ok(Self::new(GitConfig::default(), directory_manager))
     }
 
     pub fn find_object(
         &self,
-        object_type: git_object::Type,
+        _object_type: git_object::Type,
         name: String,
     ) -> Result<String, anyhow::Error> {
-        if name == "HEAD" && object_type == git_object::Type::Commit {
-            let hash = fs::read_to_string(self.directory_manager.refs_heads_path.join("master"))
-                .context("Can't open refs/heads/master file")?;
-            Ok(hash.trim_end().to_string())
+        if name == "HEAD" {
+            let ref_entry = refs::resolve_ref(
+                &self.directory_manager.dot_git_path,
+                &self.directory_manager.dot_git_path.join("HEAD"),
+            )?;
+            Ok(ref_entry)
         } else {
             Ok(name)
         }
@@ -127,6 +135,30 @@ impl GitRepository {
         let buf_reader = BufReader::new(File::open(file_path)?);
         SerializedGitObject::serialize(buf_reader, object_type)
     }
+
+    pub fn resolve_ref(&self, ref_relative_path: &str) -> Result<String, ResolveRefError> {
+        let ref_path = self.directory_manager.dot_git_path.join(ref_relative_path);
+        refs::resolve_ref(&self.directory_manager.dot_git_path, &ref_path)
+    }
+
+    pub fn list_refs(&self) -> Result<Vec<refs::Ref>, ResolveRefError> {
+        let refs = refs::list_refs(
+            &self.directory_manager.dot_git_path,
+            &self.directory_manager.refs_path,
+        )?;
+        refs.into_iter()
+            .map(|ref_item| {
+                Ok(refs::Ref {
+                    hash: ref_item.hash,
+                    path: ref_item
+                        .path
+                        .strip_prefix(&self.directory_manager.dot_git_path)
+                        .context("Failed to strip_prefix")?
+                        .to_path_buf(),
+                })
+            })
+            .collect()
+    }
 }
 
 impl TryFrom<DirectoryManager> for GitRepository {
@@ -139,9 +171,6 @@ impl TryFrom<DirectoryManager> for GitRepository {
             return Err(CreateRepoError::InvalidRepositoryFormatVersionError);
         }
 
-        Ok(Self {
-            config,
-            directory_manager,
-        })
+        Ok(Self::new(config, directory_manager))
     }
 }
