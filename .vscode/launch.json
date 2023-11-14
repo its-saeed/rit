@@ -38,7 +38,7 @@
                     "kind": "bin"
                 }
             },
-            "args": ["log"],
+            "args": ["cat-file", "commit", "57f6c4d0c63507618fecd2d6fd9d3c2f1e00620b"],
             "cwd": "${workspaceFolder}"
         },
         {

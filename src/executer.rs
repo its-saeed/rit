@@ -144,7 +144,7 @@ pub fn cmd_log(mut commit: String, n_logs: u32) -> Result<()> {
     let repo = GitRepository::find(&current_directory)?;
 
     for _ in 0..n_logs {
-        let commit_hash = repo.find_object(git_object::Type::Commit, commit)?;
+        let commit_hash = repo.find_object(&commit)?;
         let object = repo.read_object(&commit_hash)?;
         if let git_object::GitObject::Commit(c) = object {
             println!("{} {}", "commit".yellow(), commit_hash.yellow());
@@ -164,11 +164,11 @@ pub fn cmd_log(mut commit: String, n_logs: u32) -> Result<()> {
     Ok(())
 }
 
-pub fn cmd_cat_file(object_type: git_object::Type, object_hash: String) -> Result<()> {
+pub fn cmd_cat_file(_object_type: git_object::Type, object_hash: String) -> Result<()> {
     let current_directory = std::env::current_dir()?;
     let repo = GitRepository::find(&current_directory)?;
 
-    let object = repo.read_object(&repo.find_object(object_type, object_hash)?)?;
+    let object = repo.read_object(&object_hash)?;
     print!("{}", object.serialize());
     Ok(())
 }

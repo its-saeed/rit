@@ -3,7 +3,7 @@ pub mod refs;
 use crate::{
     error::{repository::ResolveRefError, CreateRepoError, ObjectCreateError, ObjectParseError},
     git_config::GitConfig,
-    git_object::{self, Blob, CompressedGitObject, KeyValueList, SerializedGitObject, Tag, Type},
+    git_object::{Blob, CompressedGitObject, KeyValueList, SerializedGitObject, Tag, Type},
     DirectoryManager, GitObject,
 };
 
@@ -89,24 +89,57 @@ impl GitRepository {
 
 // Object related methods
 impl GitRepository {
-    pub fn find_object(
-        &self,
-        _object_type: git_object::Type,
-        name: String,
-    ) -> Result<String, anyhow::Error> {
+    fn resolve_object(&self, name: &str) -> Result<Vec<String>, anyhow::Error> {
+        let mut candidates = vec![];
+
         if name == "HEAD" {
             let ref_entry = refs::resolve_ref(
                 &self.directory_manager.dot_git_path,
                 &self.directory_manager.dot_git_path.join("HEAD"),
             )?;
-            Ok(ref_entry)
-        } else {
-            Ok(name)
+            return Ok(vec![ref_entry]);
+        }
+
+        let regex = regex::Regex::new("^[0-9A-Fa-f]{4,40}$").unwrap();
+        if regex.is_match(&name) {
+            let directory = &name[0..2].to_lowercase();
+            let path = self.directory_manager.objects_path.join(directory);
+            for entry in path.read_dir()? {
+                let entry = entry?.path();
+                let filename = entry
+                    .file_name()
+                    .ok_or(anyhow::anyhow!("Failed to get filename"))?
+                    .to_str()
+                    .ok_or(anyhow::anyhow!("Failed to get the filename"))?;
+                if filename.starts_with(&name[2..]) {
+                    candidates.push(format!("{}{}", directory, filename))
+                }
+            }
+        }
+
+        if let Ok(tag) = self.resolve_ref(&format!("refs/tags/{}", name)) {
+            candidates.push(tag);
+        }
+
+        if let Ok(branch) = self.resolve_ref(&format!("refs/heads/{}", name)) {
+            candidates.push(branch);
+        }
+
+        Ok(candidates)
+    }
+
+    pub fn find_object(&self, name: &str) -> Result<String, anyhow::Error> {
+        let candidates = self.resolve_object(name)?;
+        match candidates.len() {
+            1 => Ok(candidates[0].clone()),
+            0 => Err(anyhow::anyhow!("Not a hash")),
+            _ => Err(anyhow::anyhow!("Ambiguous object name")),
         }
     }
 
-    pub fn read_object(&self, sha: &str) -> Result<GitObject, ObjectParseError> {
-        let real_file_path = self.directory_manager.sha_to_file_path(sha, false)?;
+    pub fn read_object(&self, name: &str) -> Result<GitObject, ObjectParseError> {
+        let sha = self.find_object(name)?;
+        let real_file_path = self.directory_manager.sha_to_file_path(&sha, false)?;
         let file = File::open(real_file_path)?;
         let buf_reader = BufReader::new(file);
 
@@ -186,14 +219,14 @@ impl GitRepository {
         name: String,
         object: String,
     ) -> Result<(), anyhow::Error> {
-        let object = self.find_object(git_object::Type::Tag, object)?;
+        let object = self.find_object(&object)?;
         std::fs::write(self.directory_manager.refs_tags_path.join(name), object)?;
 
         Ok(())
     }
 
     pub fn create_tag_object(&self, name: String, object: String) -> Result<(), anyhow::Error> {
-        let object = self.find_object(git_object::Type::Tag, object)?;
+        let object = self.find_object(&object)?;
         let kvl = BTreeMap::from([
             ("object".to_string(), object),
             ("type".to_string(), "commit".to_string()),
