@@ -3,13 +3,14 @@ pub mod refs;
 use crate::{
     error::{repository::ResolveRefError, CreateRepoError, ObjectCreateError, ObjectParseError},
     git_config::GitConfig,
-    git_object::{self, CompressedGitObject, SerializedGitObject, Type},
+    git_object::{self, Blob, CompressedGitObject, KeyValueList, SerializedGitObject, Tag, Type},
     DirectoryManager, GitObject,
 };
 
 use std::{
+    collections::BTreeMap,
     fs::File,
-    io::BufReader,
+    io::{BufReader, Read},
     path::{Path, PathBuf},
 };
 
@@ -21,6 +22,7 @@ pub struct GitRepository {
     pub directory_manager: DirectoryManager,
 }
 
+// Constructors
 impl GitRepository {
     pub fn new(config: GitConfig, directory_manager: DirectoryManager) -> Self {
         Self {
@@ -83,7 +85,10 @@ impl GitRepository {
 
         Ok(Self::new(GitConfig::default(), directory_manager))
     }
+}
 
+// Object related methods
+impl GitRepository {
     pub fn find_object(
         &self,
         _object_type: git_object::Type,
@@ -110,42 +115,55 @@ impl GitRepository {
         serialized.try_into()
     }
 
-    pub fn write_object(
-        &self,
-        file_path: &Path,
-        object_type: Type,
-    ) -> Result<String, ObjectCreateError> {
-        let serialized_object = Self::create_object(file_path, object_type)?;
-
-        let file_path = self
-            .directory_manager
-            .sha_to_file_path(&serialized_object.hash, true)?;
-
-        std::fs::write(
-            file_path,
-            CompressedGitObject::try_from(&serialized_object)?,
-        )?;
-        Ok(serialized_object.hash)
-    }
-
     pub fn create_object(
         file_path: &Path,
         object_type: Type,
     ) -> Result<SerializedGitObject, ObjectCreateError> {
-        let buf_reader = BufReader::new(File::open(file_path)?);
-        SerializedGitObject::serialize(buf_reader, object_type)
+        let mut buf_reader = BufReader::new(File::open(file_path)?);
+        let mut buffer = String::new();
+        buf_reader.read_to_string(&mut buffer)?;
+
+        let object = match object_type {
+            Type::Commit => todo!(),
+            Type::Tree => todo!(),
+            Type::Tag => todo!(),
+            Type::Blob => GitObject::Blob(Blob { blob: buffer }),
+        };
+
+        object.try_into()
     }
 
+    pub fn write_object(
+        &self,
+        serialized_object: &SerializedGitObject,
+    ) -> Result<(), anyhow::Error> {
+        let file_path = self
+            .directory_manager
+            .sha_to_file_path(&serialized_object.hash, true)?;
+
+        std::fs::write(file_path, CompressedGitObject::try_from(serialized_object)?)?;
+
+        Ok(())
+    }
+}
+
+// Refs methods
+impl GitRepository {
     pub fn resolve_ref(&self, ref_relative_path: &str) -> Result<String, ResolveRefError> {
         let ref_path = self.directory_manager.dot_git_path.join(ref_relative_path);
         refs::resolve_ref(&self.directory_manager.dot_git_path, &ref_path)
     }
 
     pub fn list_refs(&self) -> Result<Vec<refs::Ref>, ResolveRefError> {
-        let refs = refs::list_refs(
-            &self.directory_manager.dot_git_path,
-            &self.directory_manager.refs_path,
-        )?;
+        self.list_refs_in_absolute(&self.directory_manager.refs_path)
+    }
+
+    pub fn list_refs_in(&self, path: &Path) -> Result<Vec<refs::Ref>, ResolveRefError> {
+        self.list_refs_in_absolute(&self.directory_manager.refs_path.join(path))
+    }
+
+    pub fn list_refs_in_absolute(&self, path: &Path) -> Result<Vec<refs::Ref>, ResolveRefError> {
+        let refs = refs::list_refs(&self.directory_manager.dot_git_path, path)?;
         refs.into_iter()
             .map(|ref_item| {
                 Ok(refs::Ref {
@@ -158,6 +176,47 @@ impl GitRepository {
                 })
             })
             .collect()
+    }
+}
+
+// Tag methods
+impl GitRepository {
+    pub fn create_lightweight_tag(
+        &self,
+        name: String,
+        object: String,
+    ) -> Result<(), anyhow::Error> {
+        let object = self.find_object(git_object::Type::Tag, object)?;
+        std::fs::write(self.directory_manager.refs_tags_path.join(name), object)?;
+
+        Ok(())
+    }
+
+    pub fn create_tag_object(&self, name: String, object: String) -> Result<(), anyhow::Error> {
+        let object = self.find_object(git_object::Type::Tag, object)?;
+        let kvl = BTreeMap::from([
+            ("object".to_string(), object),
+            ("type".to_string(), "commit".to_string()),
+            ("tag".to_string(), name.clone()),
+            (
+                "tagger".to_string(),
+                "Saeed <saeed@zilliqa.com>".to_string(),
+            ),
+            ("message".to_string(), "This is the message".to_string()),
+        ]);
+
+        let tag = Tag {
+            kvl: KeyValueList::new(kvl),
+        };
+
+        let serialized = SerializedGitObject::try_from(GitObject::Tag(tag))?;
+
+        self.write_object(&serialized)?;
+        std::fs::write(
+            self.directory_manager.refs_tags_path.join(name),
+            serialized.hash,
+        )?;
+        Ok(())
     }
 }
 

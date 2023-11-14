@@ -29,8 +29,8 @@ impl GitObject {
         match self {
             GitObject::Commit(commit) => commit.serialize(),
             GitObject::Blob(blob) => blob.serialize(),
-            GitObject::Tag(_) => todo!(),
-            GitObject::Tree(_) => todo!(),
+            GitObject::Tag(tag) => tag.serialize(),
+            GitObject::Tree(tree) => tree.serialize(),
         }
     }
 
@@ -44,7 +44,7 @@ impl GitObject {
                 object_header,
             )?)),
             Type::Tree => Ok(Self::Tree(Tree::deserialize(buf_reader, object_header)?)),
-            Type::Tag => todo!(),
+            Type::Tag => Ok(Self::Tag(Tag::deserialize(buf_reader, object_header)?)),
             Type::Blob => Ok(Self::Blob(Blob::deserialize(buf_reader, object_header)?)),
         }
     }

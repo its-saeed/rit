@@ -8,6 +8,13 @@ use crate::{error::ParseArgumentsError, git_object::Type};
 type Sha1 = String;
 
 #[derive(Debug)]
+pub enum TagSubCommand {
+    ListTags,
+    CreateTagObject { name: String, object: String },
+    CreateLightweightTag { name: String, object: String },
+}
+
+#[derive(Debug)]
 pub enum Command {
     Init {
         path: String,
@@ -34,6 +41,9 @@ pub enum Command {
         path: String,
     },
     ShowRef,
+    Tag {
+        command: TagSubCommand,
+    },
 }
 
 pub fn parse_args() -> Result<Command, ParseArgumentsError> {
@@ -113,6 +123,28 @@ pub fn parse_args() -> Result<Command, ParseArgumentsError> {
                 ),
         )
         .subcommand(ClapCommand::new("show-ref").about("List references."))
+        .subcommand(
+            ClapCommand::new("tag")
+                .about("List and create tags")
+                .arg(
+                    Arg::new("name")
+                        .value_name("NAME")
+                        .help("The new tag's name"),
+                )
+                .arg(
+                    Arg::new("object")
+                        .value_name("OBJECT")
+                        .help("The object the new tag will point to"),
+                )
+                .arg(
+                    Arg::new("tag_object")
+                        .short('a')
+                        .long("add-tag-object")
+                        .requires("name")
+                        .help("Whether to create a tag object")
+                        .action(ArgAction::SetTrue),
+                ),
+        )
         .get_matches();
 
     if let Some(subcommand) = matches.subcommand_matches("init") {
@@ -148,6 +180,31 @@ pub fn parse_args() -> Result<Command, ParseArgumentsError> {
         Ok(Command::Checkout { commit, path })
     } else if let Some(_) = matches.subcommand_matches("show-ref") {
         Ok(Command::ShowRef)
+    } else if let Some(subcommand) = matches.subcommand_matches("tag") {
+        let name = subcommand.get_one::<String>("name");
+        let object = subcommand.get_one::<String>("object");
+        let add_tag_object = subcommand.get_flag("tag_object");
+        let add_lightweight_tag = add_tag_object == false && name.is_some();
+
+        if add_tag_object {
+            Ok(Command::Tag {
+                command: TagSubCommand::CreateTagObject {
+                    name: name.unwrap().clone(), // Safe to call unwrap, we specified that if -a presents, name must too.
+                    object: object.map(|val| val.clone()).unwrap_or("HEAD".to_string()),
+                },
+            })
+        } else if add_lightweight_tag {
+            Ok(Command::Tag {
+                command: TagSubCommand::CreateLightweightTag {
+                    name: name.unwrap().clone(), // Safe to call unwrap, add_lightweight_tag has a check for presence of name
+                    object: object.map(|val| val.clone()).unwrap_or("HEAD".to_string()),
+                },
+            })
+        } else {
+            Ok(Command::Tag {
+                command: TagSubCommand::ListTags,
+            })
+        }
     } else {
         Err(anyhow!("Argument parse failed"))?
     }

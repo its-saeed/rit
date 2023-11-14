@@ -1,12 +1,12 @@
 use anyhow::Context;
-use std::io::{BufRead, BufWriter, Write};
+use std::io::{BufWriter, Write};
 
 use crate::{
     error::{ObjectCreateError, ObjectParseError},
-    GitObject,
+    git_object, GitObject,
 };
 
-use super::{Blob, Header, Type};
+use super::Header;
 
 pub struct SerializedGitObject {
     raw: Vec<u8>,
@@ -26,21 +26,17 @@ impl SerializedGitObject {
             raw,
         }
     }
+}
 
-    pub fn serialize(
-        mut buf_reader: impl BufRead,
-        object_type: Type,
-    ) -> Result<SerializedGitObject, ObjectCreateError> {
-        let mut buffer = String::new();
-        buf_reader.read_to_string(&mut buffer)?;
-        let serialized = match object_type {
-            Type::Commit => todo!(),
-            Type::Tree => todo!(),
-            Type::Tag => todo!(),
-            Type::Blob => {
-                let object = Blob { blob: buffer };
-                object.serialize()
-            }
+impl TryFrom<GitObject> for SerializedGitObject {
+    type Error = ObjectCreateError;
+
+    fn try_from(value: GitObject) -> Result<Self, Self::Error> {
+        let (serialized_object, object_type) = match value {
+            GitObject::Commit(commit) => (commit.serialize(), git_object::Type::Commit),
+            GitObject::Blob(blob) => (blob.serialize(), git_object::Type::Blob),
+            GitObject::Tag(tag) => (tag.serialize(), git_object::Type::Tag),
+            GitObject::Tree(tree) => (tree.serialize(), git_object::Type::Tree),
         };
 
         let buffer = Vec::<u8>::new();
@@ -49,8 +45,8 @@ impl SerializedGitObject {
         write!(
             buf_writer,
             "{}{}",
-            Header::new(object_type, serialized.len()),
-            serialized
+            Header::new(object_type, serialized_object.len()),
+            serialized_object
         )?;
 
         buf_writer.flush()?;
