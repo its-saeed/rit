@@ -49,3 +49,5 @@
 ## Refs, tags and branches
 
 * [Implement show-ref command](refs-tags-and-branches/implement-show-ref-command.md)
+* [Implement tag command](refs-tags-and-branches/implement-tag-command.md)
+* [Improve find\_object](refs-tags-and-branches/improve-find\_object.md)
